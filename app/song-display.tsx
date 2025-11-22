@@ -1,225 +1,446 @@
-'use client'
-import { useState } from "react"
-import {Queue, Song} from './lib/definitions'
+// 'use client'
+// import { useState, useEffect } from "react"
+// import {Queue, Song} from './lib/definitions'
 
-// call the processing in page.tsx (backend) -> pass the randomized 5 list as a prop here
-// when play next button is pressed -> update songQueue, songId
-// if queue is empty, plays a non recently played (within last 10 songs) song from recommended list
+// // have a state called AI for AI toggle -> onMoodBlock will update recommended Array every 10s - do nothing if not AI
+// // buttons will be visible if not AI -> update recommended Array
+// // EmotionDetector will be a component within song-display -- this implements onMoodBlock AND has the html for the camera video
 
-const songQueue = new Queue<Song>()
+// // call the processing in page.tsx (backend) -> pass the randomized 5 list as a prop here
+// // when play next button is pressed -> update songQueue, songId
+// // if queue is empty, plays a non recently played (within last 10 songs) song from recommended list
 
-// ensure the last 10 songs are not repeated
-// freq map, set, queue - when we play a new song, add to queue + set + update freq, popqueue if >10, -- freq[e], if freq == 0, remove from set
-// when we recommend song, ensure it's not in set
-const freq = new Map<string, number>();
-const lastTenSongs = new Set<string>();
-const lastSongsQueue = new Queue<Song>();
+// const songQueue = new Queue<Song>()
 
-export default function SongDisplay() {
-    // add a button to clear recommended list and queue list
-    const [recommended, setRecommended] = useState<(Song | null)[]>(Array(5).fill(null))
+// // ensure the last 10 songs are not repeated
+// // freq map, set, queue - when we play a new song, add to queue + set + update freq, popqueue if >10, -- freq[e], if freq == 0, remove from set
+// // when we recommend song, ensure it's not in set
+// const freq = new Map<string, number>();
+// const lastTenSongs = new Set<string>();
+// const lastSongsQueue = new Queue<Song>();
 
-    // trigger re-renders when queue changes
-    const [queueVersion, setQueueVersion] = useState(0)
+// export default function SongDisplay() {
+//     const [AI, setAI] = useState(false)
+//     const [isDark, setIsDark] = useState(true) // Default to dark mode
 
-    const [songId, setSongId] = useState("3v6sBj3swihU8pXQQHhDZo")
+//     const [recommended, setRecommended] = useState<(Song | null)[]>(Array(5).fill(null))
+//     const [currentEmotion, setCurrentEmotion] = useState<string>('')
 
-    // update the last 10 recently played list
-    const addToRecentlyPlayed = (song: Song) => {
-        // Add to set and update frequency
-        lastTenSongs.add(song.id);
-        freq.set(song.id, (freq.get(song.id) || 0) + 1);
-        lastSongsQueue.enqueue(song);
+//     // trigger re-renders when queue changes
+//     const [, setQueueVersion] = useState(0)
 
-        // If we have more than 10 songs, remove the oldest
-        if (lastSongsQueue.size() > 10) {
-            const oldestSong = lastSongsQueue.dequeue();
-            if (oldestSong) {
-                const currentFreq = freq.get(oldestSong.id) || 0;
-                if (currentFreq <= 1) {
-                    freq.delete(oldestSong.id);
-                    lastTenSongs.delete(oldestSong.id);
-                } else {
-                    freq.set(oldestSong.id, currentFreq - 1);
-                }
-            }
-        }
-    };
+//     const [songId, setSongId] = useState("1yn5VIHdxIlVMPRdQzR2sm")
+
+//     // update the last 10 recently played list
+//     const addToRecentlyPlayed = (song: Song) => {
+//         // Add to set and update frequency
+//         lastTenSongs.add(song.id);
+//         freq.set(song.id, (freq.get(song.id) || 0) + 1);
+//         lastSongsQueue.enqueue(song);
+
+//         // If we have more than 10 songs, remove the oldest
+//         if (lastSongsQueue.size() > 10) {
+//             const oldestSong = lastSongsQueue.dequeue();
+//             if (oldestSong) {
+//                 const currentFreq = freq.get(oldestSong.id) || 0;
+//                 if (currentFreq <= 1) {
+//                     freq.delete(oldestSong.id);
+//                     lastTenSongs.delete(oldestSong.id);
+//                 } else {
+//                     freq.set(oldestSong.id, currentFreq - 1);
+//                 }
+//             }
+//         }
+//     };
     
-    // Function to add song to queue (FIFO)
-    const addToQueue = (song: Song | null) => {
-        if (song) {
-            songQueue.enqueue(song);
-            setQueueVersion(prev => prev + 1); // Force re-render
+//     // Function to add song to queue (FIFO)
+//     const addToQueue = (song: Song | null) => {
+//         if (song) {
+//             songQueue.enqueue(song);
+//             setQueueVersion(prev => prev + 1); // Force re-render
 
-        }
-    };
+//         }
+//     };
 
-    // Function to remove song from queue by index
-    const removeFromQueue = (index: number) => {
-        songQueue.remove(index);
-        setQueueVersion(prev => prev + 1); // Force re-render
+//     // Function to remove song from queue by index
+//     const removeFromQueue = (index: number) => {
+//         songQueue.remove(index);
+//         setQueueVersion(prev => prev + 1); // Force re-render
 
-    };
+//     };
 
-    // Function to play next song (top song)
-    const playNextSong = () => {
-        const nextSong = songQueue.dequeue();
-        if (nextSong) {
-            setSongId(nextSong.id);
-            addToRecentlyPlayed(nextSong); // Track the song
-            setQueueVersion(prev => prev + 1); // Force re-render
-        } else {
-            // play a random song from the recommended
-            // ensure the random song hasn't played in the last 10 songs
-            const availableSongs = recommended.filter(song => 
-                song !== null && !lastTenSongs.has(song.id)
-            ) as Song[];
+//     // Function to play next song (top song)
+//     const playNextSong = () => {
+//         const nextSong = songQueue.dequeue();
+//         if (nextSong) {
+//             setSongId(nextSong.id);
+//             addToRecentlyPlayed(nextSong); // Track the song
+//             setQueueVersion(prev => prev + 1); // Force re-render
+//         } else {
+//             // play a random song from the recommended
+//             // ensure the random song hasn't played in the last 10 songs
+//             const availableSongs = recommended.filter(song => 
+//                 song !== null && !lastTenSongs.has(song.id)
+//             ) as Song[];
             
-            if (availableSongs.length > 0) {
-                const randomIndex = Math.floor(Math.random() * availableSongs.length);
-                const randomSong = availableSongs[randomIndex];
-                setSongId(randomSong.id);
-                addToRecentlyPlayed(randomSong); // Track the song
-            } else {
-                // If all recommended songs are in last 10, just pick any random one
-                const nonNullRecommended = recommended.filter(song => song !== null) as Song[];
-                if (nonNullRecommended.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * nonNullRecommended.length);
-                    const randomSong = nonNullRecommended[randomIndex];
-                    setSongId(randomSong.id);
-                    addToRecentlyPlayed(randomSong);
-                }
-            }
-        }
-    };    // Function to populate recommended list (placeholder)
-    const populateRecommended = () => {
-        setRecommended([
-            { id: "7KCWmFdw0TzoJbKtqRRzJO", name: "Sample Song 1" , tempo: 128.05},
-            { id: "2CY92qejUrhyPUASawNVRr", name: "Sample Song 2" , tempo: 40},
-            { id: "11BPfwVbB7vok7KfjBeW4k", name: "Sample Song 3" , tempo: 20},
-            { id: "3v6sBj3swihU8pXQQHhDZo", name: "Sample Song 4" , tempo: 100},
-            { id: "5ZWMcomAviWuMGZWbBxmGd", name: "Sample Song 5" , tempo: 80}
-        ]);
-    };
+//             if (availableSongs.length > 0) {
+//                 const randomIndex = Math.floor(Math.random() * availableSongs.length);
+//                 const randomSong = availableSongs[randomIndex];
+//                 setSongId(randomSong.id);
+//                 addToRecentlyPlayed(randomSong); // Track the song
+//             } else {
+//                 // If all recommended songs are in last 10, just pick any random one
+//                 const nonNullRecommended = recommended.filter(song => song !== null) as Song[];
+//                 if (nonNullRecommended.length > 0) {
+//                     const randomIndex = Math.floor(Math.random() * nonNullRecommended.length);
+//                     const randomSong = nonNullRecommended[randomIndex];
+//                     setSongId(randomSong.id);
+//                     addToRecentlyPlayed(randomSong);
+//                 }
+//             }
+//         }
+//     };    
 
-    return(
-        <div className="flex gap-6 p-4">
-            {/* Spotify Player */}
-            <div className="flex flex-col">
-                <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-                    Now playing [x]!!
-                </h1>
-                <br></br>
-                <iframe
-                    src={`https://open.spotify.com/embed/track/${songId}`}
-                    width="400"
-                    height="400"
-                    allow="encrypted-media">
-                </iframe>
-                <button
-                    onClick={playNextSong}
-                    style={{ marginTop: "12px", padding: "8px 14px" }}
-                    className="
-                        mt-4 px-4 py-2 
-                        rounded-full 
-                        bg-[#1db954] 
-                        text-black font-semibold 
-                        hover:bg-[#1ed760] 
-                        transition-colors 
-                        shadow-md hover:shadow-lg
-                    ">
-                    Next Song
-                </button>
-                <button
-                    onClick={populateRecommended}
-                    style={{ marginTop: "8px", padding: "8px 14px" }}
-                    className="
-                        mt-2 px-4 py-2 
-                        rounded-full 
-                        bg-purple-600 
-                        text-white font-semibold 
-                        hover:bg-purple-700 
-                        transition-colors 
-                        shadow-md hover:shadow-lg
-                    ">
-                    Get Recommendations
-                </button>
-            </div>
+//     // Function to get recommendations based on emotion
+//     const getRecommendationsByEmotion = async (emotion: string) => {
+//         try {
+//             const response = await fetch(`/api/recommendSong?emotion=${emotion}&quantity=5`);
+//             const data = await response.json();
+            
+//             if (response.ok) {
+//                 const songs = data.songs || [];
+                
+//                 // Fetch song names from Spotify API for each song
+//                 const songsWithNames = await Promise.all(
+//                     songs.map(async (song: Song) => {
+//                         try {
+//                             const trackResponse = await fetch(`/api/track/${song.id}`);
+//                             if (trackResponse.ok) {
+//                                 const trackData = await trackResponse.json();
+//                                 return {
+//                                     ...song,
+//                                     name: trackData.name || song.name || 'Unknown Song'
+//                                 };
+//                             } else {
+//                                 return {
+//                                     ...song,
+//                                     name: song.name || 'Unknown Song'
+//                                 };
+//                             }
+//                         } catch (error) {
+//                             console.error(`Error fetching track data for ${song.id}:`, error);
+//                             return {
+//                                 ...song,
+//                                 name: song.name || 'Unknown Song'
+//                             };
+//                         }
+//                     })
+//                 );
+                
+//                 setRecommended(songsWithNames.concat(Array(5 - songsWithNames.length).fill(null)));
+//                 setCurrentEmotion(emotion);
+//             } else {
+//                 console.error('Error fetching recommendations:', data.error);
+//                 // Fallback to empty recommendations
+//                 setRecommended(Array(5).fill(null));
+//                 setCurrentEmotion('');
+//             }
+//         } catch (error) {
+//             console.error('Error fetching recommendations:', error);
+//             // Fallback to empty recommendations
+//             setRecommended(Array(5).fill(null));
+//             setCurrentEmotion('');
+//         }
+//     };
 
-            {/* Queue and Recommended Lists */}
-            <div className="flex flex-col gap-4 w-80">
-                {/* Queue Box */}
-                <div className="bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-white font-semibold mb-3 text-lg">Queue ({songQueue.size()} songs)</h3>
-                    <div className="space-y-2 h-60 overflow-y-auto" style={{
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: '#6b7280 #374151'
-                    }}>
-                        <style jsx>{`
-                            div::-webkit-scrollbar {
-                                width: 8px;
-                            }
-                            div::-webkit-scrollbar-track {
-                                background: #374151;
-                                border-radius: 4px;
-                            }
-                            div::-webkit-scrollbar-thumb {
-                                background: #6b7280;
-                                border-radius: 4px;
-                            }
-                            div::-webkit-scrollbar-thumb:hover {
-                                background: #9ca3af;
-                            }
-                        `}</style>
-                        {songQueue.size() === 0 ? (
-                            <div className="p-2 bg-gray-700 rounded">
-                                <span className="text-gray-400 text-sm">Queue is empty</span>
-                            </div>
-                        ) : (
-                            songQueue.getArray().map((song, index) => (
-                                <div key={`${song.id}-${index}`} className="flex items-center justify-between p-2 bg-gray-700 rounded">
-                                    <span className="text-white text-sm truncate flex-1">
-                                        {song.name}
-                                    </span>
-                                    <button
-                                        onClick={() => removeFromQueue(index)}
-                                        className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold ml-2"
-                                    >
-                                        -
-                                    </button>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
+//     // Load neutral recommendations on component mount
+//     useEffect(() => {
+//         const loadInitialRecommendations = async () => {
+//             await getRecommendationsByEmotion('neutral');
+//         };
+//         loadInitialRecommendations();
+//     }, []);
 
-                {/* Recommended Box */}
-                <div className="bg-gray-800 rounded-lg p-4">
-                    <h3 className="text-white font-semibold mb-3 text-lg">Recommended</h3>
-                    <div className="space-y-2 h-60">
-                        {recommended.map((song, index) => (
-                            <div key={index} className="flex items-center justify-between p-2 bg-gray-700 rounded">
-                                {song ? (
-                                    <>
-                                        <span className="text-white text-sm truncate flex-1">
-                                            {song.name}
-                                        </span>
-                                        <button
-                                            onClick={() => addToQueue(song)}
-                                            className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold ml-2"
-                                        >
-                                            +
-                                        </button>
-                                    </>
-                                ) : (
-                                    <span className="text-gray-400 text-sm">No recommendation {index + 1}</span>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
+//     return(
+//         <div className={`min-h-screen max-h-screen overflow-hidden transition-colors duration-300 ${
+//             isDark 
+//                 ? 'bg-black text-white' 
+//                 : 'bg-gradient-to-br from-green-50 to-green-100 text-gray-900'
+//         }`}>
+//             <div className="flex gap-6 p-4 h-screen">
+//                 {/* Spotify Player */}
+//                 <div className="flex flex-col w-96">
+//                     <h1 className={`text-center mb-2.5 text-3xl font-bold tracking-tight ${
+//                         isDark ? 'text-white' : 'text-gray-900'
+//                     }`}>
+//                         MeloMoods :D
+//                     </h1>
+//                     <div className={`rounded-xl overflow-hidden ${
+//                         isDark ? 'bg-gray-900' : 'bg-white shadow-lg'
+//                     }`}>
+//                         <iframe
+//                             src={`https://open.spotify.com/embed/track/${songId}`}
+//                             width="380"
+//                             height="360"
+//                             allow="encrypted-media"
+//                             style={{ border: 'none' }}>
+//                         </iframe>
+//                     </div>
+//                     <button
+//                         onClick={playNextSong}
+//                         className="
+//                             mt-4 px-6 py-3 
+//                             rounded-full 
+//                             bg-[#1db954] 
+//                             text-black font-bold text-sm uppercase tracking-wider
+//                             hover:bg-[#1ed760] 
+//                             transition-all duration-200
+//                             shadow-lg hover:shadow-xl
+//                             hover:scale-105
+//                         ">
+//                         Next Song
+//                     </button>
+                    
+//                     {/* Toggle Controls */}
+//                     <div className="mt-6 space-y-3">
+//                         {/* Both toggles side by side */}
+//                         <div className="flex items-center justify-center gap-8">
+//                             {/* Light/Dark Mode Toggle */}
+//                             <div className="flex items-center space-x-2">
+//                                 <span className={`text-sm font-medium ${
+//                                     isDark ? 'text-gray-300' : 'text-gray-900'
+//                                 }`}>
+//                                     Light
+//                                 </span>
+//                                 <button
+//                                     onClick={() => setIsDark(!isDark)}
+//                                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+//                                         isDark ? 'bg-gray-600' : 'bg-gray-300'
+//                                     }`}
+//                                 >
+//                                     <span
+//                                         className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+//                                             isDark ? 'translate-x-5' : 'translate-x-1'
+//                                         }`}
+//                                     />
+//                                 </button>
+//                                 <span className={`text-sm font-medium ${
+//                                     isDark ? 'text-gray-white' : 'text-gray-600'
+//                                 }`}>
+//                                     Dark
+//                                 </span>
+//                             </div>
+
+//                             {/* Manual/Auto Toggle */}
+//                             <div className="flex items-center space-x-2">
+//                                 <span className={`text-sm font-medium ${
+//                                     !AI ? (isDark ? 'text-white' : 'text-gray-900') : 'text-gray-400'
+//                                 }`}>
+//                                     Manual
+//                                 </span>
+//                                 <button
+//                                     onClick={() => setAI(!AI)}
+//                                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+//                                         AI ? 'bg-[#1db954]' : 'bg-gray-300'
+//                                     }`}
+//                                 >
+//                                     <span
+//                                         className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+//                                             AI ? 'translate-x-5' : 'translate-x-1'
+//                                         }`}
+//                                     />
+//                                 </button>
+//                                 <span className={`text-sm font-medium ${
+//                                     AI ? (isDark ? 'text-white' : 'text-gray-900') : 'text-gray-400'
+//                                 }`}>
+//                                     Auto
+//                                 </span>
+//                             </div>
+//                         </div>
+//                     </div>
+                    
+//                     {/* Emotion Buttons or Placeholder */}
+//                     {!AI ? (
+//                         <div className="mt-6">
+//                             <div className="space-y-3">
+//                                 {/* Neutral button - full width */}
+//                                 <button
+//                                     onClick={() => getRecommendationsByEmotion('neutral')}
+//                                     className={`
+//                                         w-full px-4 py-3 text-sm font-medium rounded-lg 
+//                                         transition-all duration-200
+//                                         bg-white hover:bg-gray-100 text-black border border-gray-300 shadow-sm
+//                                         hover:shadow-lg capitalize
+//                                     `}>
+//                                     neutral
+//                                 </button>
+//                                 {/* Other emotions - 2x3 grid */}
+//                                 <div className="grid grid-cols-2 gap-2">
+//                                     {[
+//                                         {emotion: 'happy'},
+//                                         {emotion: 'sad'},
+//                                         {emotion: 'angry'},
+//                                         {emotion: 'fearful'},
+//                                         {emotion: 'disgusted'},
+//                                         {emotion: 'surprised'}
+//                                     ].map(({emotion}) => (
+//                                         <button
+//                                             key={emotion}
+//                                             onClick={() => getRecommendationsByEmotion(emotion)}
+//                                             className={`
+//                                                 px-3 py-2 text-sm font-medium rounded-lg
+//                                                 transition-all duration-200
+//                                                 bg-white hover:bg-gray-100 text-black border border-gray-300 shadow-sm
+//                                                 hover:shadow-lg capitalize
+//                                             `}>
+//                                             {emotion}
+//                                         </button>
+//                                     ))}
+//                                 </div>
+//                             </div>
+//                         </div>
+//                     ) : (
+//                         <div className="mt-6">
+//                             <div className={`rounded-xl p-6 text-center ${
+//                                 isDark 
+//                                     ? 'bg-gray-900 border border-gray-800' 
+//                                     : 'bg-white border border-gray-200 shadow-lg'
+//                             }`}>
+//                                 <div className={`mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+//                                     <svg className="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+//                                     </svg>
+//                                 </div>
+//                                 <h4 className={`text-lg font-semibold mb-2 ${
+//                                     isDark ? 'text-white' : 'text-gray-900'
+//                                 }`}>
+//                                     AI Mode Active
+//                                 </h4>
+//                                 <p className={`text-sm ${
+//                                     isDark ? 'text-gray-400' : 'text-gray-500'
+//                                 }`}>
+//                                     Mood detection and automatic recommendations will appear here
+//                                 </p>
+//                             </div>
+//                         </div>
+//                     )}
+//                 </div>
+//                 {/* Queue and Recommended Lists */}
+//                 <div className="flex flex-col gap-2 w-80 h-full">
+//                     {/* Queue Box */}
+//                     <div className={`rounded-xl p-4 flex-1 ${
+//                         isDark 
+//                             ? 'bg-gray-900 border border-gray-800' 
+//                             : 'bg-white border border-gray-200 shadow-lg'
+//                     }`}>
+//                         <h3 className={`font-bold mb-3 text-lg ${
+//                             isDark ? 'text-white' : 'text-gray-900'
+//                         }`}>
+//                             🎵 Queue ({songQueue.size()} songs)
+//                         </h3>
+//                         <div className="space-y-2 h-full overflow-y-auto" style={{
+//                             scrollbarWidth: 'thin',
+//                             scrollbarColor: isDark ? '#4b5563 #1f2937' : '#d1d5db #f9fafb',
+//                             maxHeight: 'calc(50vh - 100px)'
+//                         }}>
+//                             <style jsx>{`
+//                                 div::-webkit-scrollbar {
+//                                     width: 6px;
+//                                 }
+//                                 div::-webkit-scrollbar-track {
+//                                     background: ${isDark ? '#1f2937' : '#f9fafb'};
+//                                     border-radius: 3px;
+//                                 }
+//                                 div::-webkit-scrollbar-thumb {
+//                                     background: ${isDark ? '#4b5563' : '#d1d5db'};
+//                                     border-radius: 3px;
+//                                 }
+//                                 div::-webkit-scrollbar-thumb:hover {
+//                                     background: ${isDark ? '#6b7280' : '#9ca3af'};
+//                                 }
+//                             `}</style>
+//                             {songQueue.size() === 0 ? (
+//                                 <div className={`p-3 rounded-lg text-center ${
+//                                     isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-50 text-gray-500'
+//                                 }`}>
+//                                     <span className="text-sm">Queue is empty</span>
+//                                 </div>
+//                             ) : (
+//                                 songQueue.getArray().map((song, index) => (
+//                                     <div key={`${song.id}-${index}`} className={`flex items-center justify-between p-3 rounded-lg ${
+//                                         isDark ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-50 hover:bg-gray-100'
+//                                     } transition-colors`}>
+//                                         <span className={`text-sm truncate flex-1 ${
+//                                             isDark ? 'text-white' : 'text-gray-900'
+//                                         }`}>
+//                                             {song.name}
+//                                         </span>
+//                                         <button
+//                                             onClick={() => removeFromQueue(index)}
+//                                             className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold ml-3 transition-colors"
+//                                         >
+//                                             ×
+//                                         </button>
+//                                     </div>
+//                                 ))
+//                             )}
+//                         </div>
+//                     </div>
+
+//                     {/* Header for recommendations section */}
+//                     <div className="text-center">
+//                         <h4 className={`text-lg font-semibold ${
+//                             isDark ? 'text-white' : 'text-gray-900'
+//                         }`}>
+//                             ✨ Get Recommendations by Mood
+//                         </h4>
+//                     </div>
+
+//                     {/* Recommended Box */}
+//                     <div className={`rounded-xl p-4 flex-1 ${
+//                         isDark 
+//                             ? 'bg-gray-900 border border-gray-800' 
+//                             : 'bg-white border border-gray-200 shadow-lg'
+//                     }`}>
+//                         <h3 className={`font-bold mb-3 text-lg ${
+//                             isDark ? 'text-white' : 'text-gray-900'
+//                         }`}>
+//                             🎧 Recommended {currentEmotion && `(${currentEmotion.charAt(0).toUpperCase() + currentEmotion.slice(1)})`}
+//                         </h3>
+//                         <div className="space-y-2" style={{
+//                             maxHeight: 'calc(50vh - 100px)'
+//                         }}>
+//                             {recommended.map((song, index) => (
+//                                 <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${
+//                                     isDark ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-50 hover:bg-gray-100'
+//                                 } transition-colors`}>
+//                                     {song ? (
+//                                         <>
+//                                             <span className={`text-sm truncate flex-1 ${
+//                                                 isDark ? 'text-white' : 'text-gray-900'
+//                                             }`}>
+//                                                 {song.name}
+//                                             </span>
+//                                             <button
+//                                                 onClick={() => addToQueue(song)}
+//                                                 className="w-6 h-6 bg-[#1db954] hover:bg-[#1ed760] text-white rounded-full flex items-center justify-center text-xs font-bold ml-3 transition-colors"
+//                                             >
+//                                                 +
+//                                             </button>
+//                                         </>
+//                                     ) : (
+//                                         <span className={`text-sm ${
+//                                             isDark ? 'text-gray-400' : 'text-gray-500'
+//                                         }`}>
+//                                             Loading {index + 1}...
+//                                         </span>
+//                                     )}
+//                                 </div>
+//                             ))}
+//                         </div>
+//                     </div>
+//                 </div>
+//             </div>
+//         </div>
+//     )
+// }
