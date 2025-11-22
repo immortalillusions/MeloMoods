@@ -22,3 +22,41 @@ export type Emotion = {
     feeling: keyof typeof Feeling,
     confidence: number
 }
+
+export type Song = {
+    id: string;
+    name: string;
+}
+
+// FIFO
+export class Queue<T> {
+    public items: T[] = [];
+    
+    enqueue(item: T): void {
+        this.items.push(item); // add to back
+    }
+    
+    dequeue(): T | undefined {
+        return this.items.shift(); // remove from front
+    }   
+    
+    size(): number {
+        return this.items.length;
+    }
+    
+    getArray(): T[] {
+        return this.items;
+    }
+    
+    clear(): void {
+        this.items = [];
+    }
+    
+    remove(index: number): T | undefined {
+        if (index >= 0 && index < this.items.length) {
+            // removes 1 elem at index; returns an array of the removed elements
+            return this.items.splice(index, 1)[0];
+        }
+        return undefined;
+    }
+}

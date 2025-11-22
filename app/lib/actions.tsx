@@ -11,6 +11,6 @@ import { Emotion } from "./definitions";
 
 // workaround: button that says "next song" - user can press it when the cur song ends or when they want to skip
 
-export async function queueSong(emotion: Emotion){
+export async function recommendSongs(emotion: Emotion){
 
 }
