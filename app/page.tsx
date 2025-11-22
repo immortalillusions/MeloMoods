@@ -175,9 +175,7 @@ export default function Home() {
                     }`}>
                         MeloMoods :D
                     </h1>
-                    <div className={`rounded-xl overflow-hidden ${
-                        isDark ? 'bg-gray-900' : 'bg-white shadow-lg'
-                    }`}>
+                    <div className={`rounded-xl overflow-hidden`}>
                         <iframe
                             src={`https://open.spotify.com/embed/track/${songId}`}
                             width="380"
