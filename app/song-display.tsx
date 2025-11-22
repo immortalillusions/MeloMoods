@@ -15,7 +15,6 @@ const freq = new Map<string, number>();
 const lastTenSongs = new Set<string>();
 const lastSongsQueue = new Queue<Song>();
 
-
 export default function SongDisplay() {
     // add a button to clear recommended list and queue list
     const [recommended, setRecommended] = useState<(Song | null)[]>(Array(5).fill(null))
@@ -96,11 +95,11 @@ export default function SongDisplay() {
     };    // Function to populate recommended list (placeholder)
     const populateRecommended = () => {
         setRecommended([
-            { id: "7KCWmFdw0TzoJbKtqRRzJO", name: "Sample Song 1" },
-            { id: "2CY92qejUrhyPUASawNVRr", name: "Sample Song 2" },
-            { id: "11BPfwVbB7vok7KfjBeW4k", name: "Sample Song 3" },
-            { id: "3v6sBj3swihU8pXQQHhDZo", name: "Sample Song 4" },
-            { id: "5ZWMcomAviWuMGZWbBxmGd", name: "Sample Song 5" }
+            { id: "7KCWmFdw0TzoJbKtqRRzJO", name: "Sample Song 1" , tempo: 128.05},
+            { id: "2CY92qejUrhyPUASawNVRr", name: "Sample Song 2" , tempo: 40},
+            { id: "11BPfwVbB7vok7KfjBeW4k", name: "Sample Song 3" , tempo: 20},
+            { id: "3v6sBj3swihU8pXQQHhDZo", name: "Sample Song 4" , tempo: 100},
+            { id: "5ZWMcomAviWuMGZWbBxmGd", name: "Sample Song 5" , tempo: 80}
         ]);
     };
 

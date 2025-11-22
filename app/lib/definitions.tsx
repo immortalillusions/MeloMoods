@@ -6,13 +6,13 @@
 // valence: 0 (negative) - 1 (positive)
 // energy: 0-1
 export const Feeling = {
-    neutral: {labels: -1, valence: -1, energy: -1},
-    happy: {labels: 1, valence: [0.7, 1], energy: -1},
-    sad: {labels: 0, valence: -1, energy: -1},
-    angry: {labels: -1, valence: -1, energy: -1},
-    fearful: {labels: -1, valence: -1, energy: -1},
-    disgusted: {labels: -1, valence: -1, energy: -1},
-    surprised: {labels: -1, valence: -1, energy: -1}
+    neutral: {labels: -1, valence: [-1, -1], energy: [-1, -1]},
+    happy: {labels: 1, valence: [0.7, 1], energy: [-1, -1]},
+    sad: {labels: 0, valence: [0, 0.3], energy: [0, 0.3]},
+    angry: {labels: -1, valence: [0, 0.3], energy: [0.8, 1]},
+    fearful: {labels: -1, valence: [0, 0.4], energy: [0.8, 1]},
+    disgusted: {labels: -1, valence: [0, 0.4], energy: [0.3, 0.7]},
+    surprised: {labels: 2, valence: -1, energy: [0.7, 1]}
 }
 
 export type Emotion = { 
@@ -26,6 +26,7 @@ export type Emotion = {
 export type Song = {
     id: string;
     name: string;
+    tempo: number
 }
 
 // FIFO

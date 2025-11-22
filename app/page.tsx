@@ -1,7 +1,6 @@
+
 import Image from "next/image";
 import SongDisplay from "./song-display";
-
-
 
 export default function Home() {
   return (
