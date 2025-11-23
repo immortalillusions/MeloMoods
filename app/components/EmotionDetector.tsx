@@ -47,6 +47,10 @@ const lastLabelTimeRef = useRef<number>(0);
         { executionProviders: ["wasm"] }
       );
       console.log(sessionRef.current!.inputNames);
+      console.log(sessionRef.current.inputNames);
+console.log(sessionRef.current.outputNames);
+console.log(sessionRef.current.inputMetadata);
+console.log(sessionRef.current.outputMetadata);
 
       if (mounted) setIsReady(true);
     }
@@ -118,7 +122,6 @@ const lastLabelTimeRef = useRef<number>(0);
       const resized = faceapi.resizeResults(detection, dims);
       faceapi.draw.drawDetections(canvas, resized);
 
-      // preprocess to 64x64 grayscale
       const box = resized.box;
       const inputTensor = cropAndPreprocess(
         video,
@@ -128,12 +131,18 @@ const lastLabelTimeRef = useRef<number>(0);
         box.height
       );
 
-      // run ONNX
       const session = sessionRef.current!;
-      const feeds: Record<string, ort.Tensor> = { Input3: inputTensor };
+
+      const inputName = session.inputNames[0]; 
+      
+      const feeds: Record<string, ort.Tensor> = {};
+      feeds[inputName] = inputTensor;
+
       const outMap = await session.run(feeds);
-      const raw = (outMap["output"]?.data ??
-        outMap[Object.keys(outMap)[0]].data) as Float32Array;
+      const outputName = session.outputNames[0];
+      const raw = outMap[outputName].data as Float32Array;
+      
+      // console.log("AI Logits:", raw); 
 
       const probs = softmax(Array.from(raw));
       const sorted = probs
@@ -141,11 +150,9 @@ const lastLabelTimeRef = useRef<number>(0);
         .sort((a, b) => b.confidence - a.confidence);
       const top = sorted[0];
 
-      // store it for persistence
       lastLabelRef.current = `${top.expression} (${(top.confidence * 100).toFixed(1)}%)`;
       lastLabelTimeRef.current = Date.now();
 
-      // draw immediately
       ctx.font = "20px Arial";
       ctx.fillStyle = "yellow";
       ctx.fillText(lastLabelRef.current, resized.box.x, resized.box.y - 10);
@@ -169,9 +176,8 @@ const lastLabelTimeRef = useRef<number>(0);
     return () => clearInterval(timer);
   }, [isReady, onMoodBlock]);
 
-  // --- Helpers ---
 
-  function cropAndPreprocess(
+ function cropAndPreprocess(
     video: HTMLVideoElement,
     x: number,
     y: number,
@@ -183,19 +189,21 @@ const lastLabelTimeRef = useRef<number>(0);
     tmp.width = SIZE;
     tmp.height = SIZE;
     const tctx = tmp.getContext("2d")!;
+    
     const sx = Math.max(0, x);
     const sy = Math.max(0, y);
     const sw = Math.max(1, Math.min(w, video.videoWidth - sx));
     const sh = Math.max(1, Math.min(h, video.videoHeight - sy));
+
     tctx.drawImage(video, sx, sy, sw, sh, 0, 0, SIZE, SIZE);
     const img = tctx.getImageData(0, 0, SIZE, SIZE);
     
     const floatData = new Float32Array(SIZE * SIZE);
     for (let i = 0; i < SIZE * SIZE; i++) {
-      const r = img.data[i * 4 + 0] / 255;
-      const g = img.data[i * 4 + 1] / 255;
-      const b = img.data[i * 4 + 2] / 255;
-      // grayscale
+      const r = img.data[i * 4 + 0]; 
+      const g = img.data[i * 4 + 1]; 
+      const b = img.data[i * 4 + 2]; 
+      
       floatData[i] = 0.2989 * r + 0.587 * g + 0.114 * b;
     }
 
