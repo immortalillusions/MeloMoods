@@ -1,6 +1,6 @@
 # MeloMoods 🎵
 
-A mood-based music recommendation system that tailors Spotify song suggestions to your emotional state using AI emotion detection or manual mood selection.
+A mood-based music recommendation system that tailors Spotify song suggestions to your emotional state using AI emotion detection or manual mood selection. Animated avatars reflect your mood!
 
 ## Features
 
