@@ -179,7 +179,7 @@ export default function Home() {
       const options = {
         uri: `spotify:track:${songId}`,
         width: "100%",
-        height: "360px",
+        height: "355px",
         theme: isDark ? "dark" : "light",
       };
 
@@ -224,7 +224,7 @@ export default function Home() {
         <div className="flex flex-col w-96">
           <div className="flex items-center justify-center gap-3 mb-2.5">
             <h1
-              className={`text-3xl font-bold tracking-tight ${
+              className={`mt-3 text-3xl font-bold tracking-tight ${
                 isDark ? "text-white" : "text-gray-900"
               }`}
             >
@@ -242,7 +242,7 @@ export default function Home() {
           <button
             onClick={playNextSong}
             className="
-                            mt-2 px-6 py-3 
+                            mt-2 px-6 py-2 
                             rounded-full 
                             bg-[#1db954] 
                             text-black font-bold text-sm uppercase tracking-wider
@@ -367,7 +367,7 @@ export default function Home() {
                   }}
                   disabled={isLoading}
                   className={`
-                                        w-full h-12 px-4 py-2 text-sm font-medium rounded-lg 
+                                        w-full h-9 px-4 py-2 text-sm font-medium rounded-lg 
                                         transition-all duration-200 flex items-center justify-center
                                         ${isLoading 
                                           ? isDark
@@ -398,7 +398,7 @@ export default function Home() {
                       }}
                       disabled={isLoading}
                       className={`
-                                                h-10 px-3 py-2 text-sm font-medium rounded-lg
+                                                h-9 px-3 py-2 text-sm font-medium rounded-lg
                                                 transition-all duration-200 flex items-center justify-center
                                                 ${isLoading 
                                                   ? isDark
@@ -417,9 +417,9 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="mt-6">
+            <div className="mt-2">
               <div
-                className={`rounded-xl p-6 text-center ${
+                className={`rounded-xl p-2 text-center ${
                   isDark
                     ? "bg-slate-900 border border-slate-700"
                     : "bg-white border border-gray-200 shadow-lg"
@@ -436,8 +436,8 @@ export default function Home() {
                     }
                   }}
                 />
-                <span className={`mt-4 block text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                  Your camera will be used to detect your mood every 10 seconds and update recommendations automatically.
+                <span className={`mt-2 block text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Recommendations update to your mood every 10s.
                 </span>
               </div>
             </div>

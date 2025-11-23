@@ -260,7 +260,7 @@ console.log(sessionRef.current.outputMetadata);
 
   return (
     <div className="relative w-full max-w-xs mx-auto overflow-hidden rounded-lg border border-gray-700">
-      <div className="relative w-full h-38 bg-black overflow-hidden rounded-lg">
+      <div className="relative w-full h-35 bg-black overflow-hidden rounded-lg">
         <video
           ref={videoRef}
           autoPlay
