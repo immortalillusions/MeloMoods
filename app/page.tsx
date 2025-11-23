@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Queue, Song } from "./lib/definitions";
+import { Emotion, Queue, Song } from "./lib/definitions";
 import EmotionDetector from "./components/EmotionDetector";
+import MoodAvatar from "./components/MoodAvatar";
 
 // --- Types for Spotify IFrame API ---
 interface IFrameOptions {
@@ -38,9 +39,10 @@ const lastTenSongs = new Set<string>();
 const lastSongsQueue = new Queue<Song>();
 
 export default function Home() {
+  const[mood, setMood] = useState<(string)>("neutral");
   // --- UI State ---
   const [AI, setAI] = useState(false);
-  const [isDark, setIsDark] = useState(false); // Default to light mode
+  const [isDark, setIsDark] = useState(true); // Default to dark mode
   const [isLoading, setIsLoading] = useState(false); // Loading state for recommendations
 
   const [recommended, setRecommended] = useState<(Song | null)[]>(
@@ -177,7 +179,7 @@ export default function Home() {
       const options = {
         uri: `spotify:track:${songId}`,
         width: "100%",
-        height: "390px",
+        height: "500px",
         theme: isDark ? "dark" : "light",
       };
 
@@ -220,24 +222,27 @@ export default function Home() {
       <div className="flex gap-6 p-4 h-screen justify-center items-start">
         {/* Left Column: Player & Controls */}
         <div className="flex flex-col w-96">
-          <h1
-            className={`text-center mb-2.5 text-3xl font-bold tracking-tight ${
-              isDark ? "text-white" : "text-gray-900"
-            }`}
-          >
-            MeloMoods :D
-          </h1>
-          
+          <div className="flex items-center justify-center gap-3 mb-2.5">
+            <h1
+              className={`text-3xl font-bold tracking-tight ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              MeloMoods
+            </h1>
+                        <MoodAvatar emotion={mood} />
+          </div>
+
           <div
             className={`rounded-xl overflow-hidden `}
           >
-             <div ref={embedContainerRef}   className="rounded-xl overflow-hidden shadow-xl border border-white/10 w-full sm:h-[380px] md:h-[450px] lg:h-[500px]"/>
+             <div ref={embedContainerRef}   className="rounded-xl overflow-hidden shadow-xl border border-white/10 w-full sm:h-[480px] md:h-[480px] lg:h-[480px]"/>
           </div>
 
           <button
             onClick={playNextSong}
             className="
-                            -mt-4 px-6 py-3 
+                            mt-2 px-6 py-3 
                             rounded-full 
                             bg-[#1db954] 
                             text-black font-bold text-sm uppercase tracking-wider
@@ -275,7 +280,7 @@ export default function Home() {
                         : "bg-gray-900 text-white"
                     }`}
                   >
-                    Recommendations are<br></br> based on energy & positivity<br></br>rather than content
+                    Recommendations are<br></br> based on energy & positivity
                   </div>
                 </div>
 
@@ -356,7 +361,10 @@ export default function Home() {
               <div className="space-y-2">
                 {/* Neutral button - full width */}
                 <button
-                  onClick={() => getRecommendationsByEmotion("neutral")}
+                  onClick={() => {
+                    getRecommendationsByEmotion("neutral");
+                    setMood("neutral");
+                  }}
                   disabled={isLoading}
                   className={`
                                         w-full h-12 px-4 py-2 text-sm font-medium rounded-lg 
@@ -384,7 +392,10 @@ export default function Home() {
                   ].map(({ emotion }) => (
                     <button
                       key={emotion}
-                      onClick={() => getRecommendationsByEmotion(emotion)}
+                      onClick={() => {
+                        getRecommendationsByEmotion(emotion);
+                        setMood(emotion);
+                      }}
                       disabled={isLoading}
                       className={`
                                                 h-10 px-3 py-2 text-sm font-medium rounded-lg
@@ -406,9 +417,9 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="mt-2">
+            <div className="mt-6">
               <div
-                className={`rounded-xl p-2 text-center ${
+                className={`rounded-xl p-6 text-center ${
                   isDark
                     ? "bg-slate-900 border border-slate-700"
                     : "bg-white border border-gray-200 shadow-lg"
@@ -421,11 +432,12 @@ export default function Home() {
                     if (top && top.expression) {
                       console.log("Detected Emotion:", top.expression);
                       await getRecommendationsByEmotion(top.expression);
+                      setMood(top.expression);
                     }
                   }}
                 />
-                <span className={`mt-2 block text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                  Recommendations will be updated every 10 seconds.
+                <span className={`mt-4 block text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Your camera will be used to detect your mood every 10 seconds and update recommendations automatically.
                 </span>
               </div>
             </div>
@@ -436,7 +448,7 @@ export default function Home() {
         <div className="flex flex-col gap-2 w-80 h-full">
           {/* Queue Box */}
           <div
-            className={`rounded-xl p-4 h-80 ${
+            className={`rounded-xl p-4 flex-1 ${
               isDark
                 ? "bg-slate-900 border border-slate-700"
                 : "bg-white border border-gray-200 shadow-lg"
@@ -450,11 +462,11 @@ export default function Home() {
               🎵 Queue ({songQueue.size()} songs)
             </h3>
             <div
-              className="space-y-2 overflow-y-auto"
+              className="space-y-2 h-full overflow-y-auto"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: isDark ? "#1e293b #0f172a" : "#d1d5db #f9fafb",
-                height: "240px",
+                maxHeight: "calc(50vh - 100px)",
               }}
             >
                {/* Scrollbar Styles */}
@@ -518,7 +530,7 @@ export default function Home() {
 
           {/* Recommended Box */}
           <div
-            className={`rounded-xl p-4 h-85 ${
+            className={`rounded-xl p-4 flex-1 ${
               isDark
                 ? "bg-slate-900 border border-slate-700"
                 : "bg-white border border-gray-200 shadow-lg"
