@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MeloMoods 🎵
 
-## Getting Started
+A mood-based music recommendation system that tailors Spotify song suggestions to your emotional state using AI emotion detection or manual mood selection.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 🎭 Emotion-Based Recommendations
+- **7 Emotions Supported**: neutral, happiness, sadness, anger, fear, disgust, surprise
+- **Smart Algorithm**: Recommendations based on energy level and valence (positivity) rather than content analysis. For example, an anxious / fearful listener will be recommended mid-tempo, negative songs.
+- **Large Dataset**: Powered by 278k emotion-labelled songs from the Kaggle Moodify database
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 🤖 Dual Mode System
+- **Manual Mode**: Select your current emotion to get 5 tailored song recommendations
+- **Auto Mode**: AI-powered emotion detection through facial recognition
+  - Face detection using pre-trained models from face-api.js
+  - Custom emotion detection model trained on RAF-DB database (15K+ images)
+  - 30 epochs training with 99.1% accuracy using 3-layer architecture
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🎵 Smart Playback Features
+- **Queue System**: Add recommended songs to your personal queue
+- **Auto-Play**: Automatic song progression when current track ends
+- **Smart Repeat Prevention**: Uses queue, map, and set data structures to avoid repeating recently played songs (last 10 tracks)
+- **Fallback System**: Automatically selects random songs from recommendations when queue is empty
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🎨 User Experience
+- **Light/Dark Mode**: Toggle between themes for comfortable viewing
+- **Spotify Integration**: Seamless playback using Spotify's IFrame API
+- **Real-time Updates**: Live emotion detection updates recommendations every 10 seconds in auto mode
+- **Loading States**: Visual feedback during recommendation fetching
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Frontend**: Next.js, React, TypeScript
+- **Styling**: Tailwind CSS
+- **AI/ML**: face-api.js, custom emotion detection model
+- **Database**: PostgreSQL with 278k song dataset
+- **Music API**: Spotify Web API
+- **Deployment**: Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How It Works
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Choose Your Mode**: Select manual emotion input or AI-powered detection
+2. **Get Recommendations**: Receive 5 songs tailored to your emotional state
+3. **Build Your Queue**: Add favorite recommendations to your playback queue
+4. **Enjoy**: Let MeloMoods handle the rest with smart auto-play and variety control
 
-## Deploy on Vercel
+## Database Schema
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The application uses a PostgreSQL database with the following structure:
+- **Songs table**: Contains URI, tempo, labels, valence, and energy values for 278k songs
+- **Labels**: {'sad': 0, 'happy': 1, 'energetic': 2, 'calm': 3}
+- **Valence**: 0 (negative) - 1 (positive)
+- **Energy**: 0 (low) - 1 (high)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+*Experience music that truly matches your mood with MeloMoods!* 🎶

@@ -10,7 +10,7 @@ export const Feeling = {
     happiness: {labels: 1, valence: [0.7, 1], energy: [-1, -1]},
     sadness: {labels: 0, valence: [0, 0.1], energy: [0, 0.3]},
     anger: {labels: -1, valence: [0, 0.1], energy: [0.8, 1]},
-    fear: {labels: -1, valence: [0, 0.2], energy: [0.8, 1]},
+    fear: {labels: -1, valence: [0, 0.2], energy: [0.5, 0.6]},
     disgust: {labels: -1, valence: [0, 0.2], energy: [0.3, 0.7]},
     surprise: {labels: 2, valence: -1, energy: [0.7, 1]}
 }

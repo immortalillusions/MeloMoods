@@ -218,7 +218,7 @@ export default function Home() {
                         : "bg-gray-900 text-white"
                     }`}
                   >
-                    Recommendations are<br></br> based on energy & positivity
+                    Recommendations are<br></br> based on energy & positivity<br></br>rather than content
                   </div>
                 </div>
 
