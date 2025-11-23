@@ -7,12 +7,12 @@
 // energy: 0-1
 export const Feeling = {
     neutral: {labels: -1, valence: [-1, -1], energy: [-1, -1]},
-    happy: {labels: 1, valence: [0.7, 1], energy: [-1, -1]},
-    sad: {labels: 0, valence: [0, 0.3], energy: [0, 0.3]},
-    angry: {labels: -1, valence: [0, 0.3], energy: [0.8, 1]},
-    fearful: {labels: -1, valence: [0, 0.4], energy: [0.8, 1]},
-    disgusted: {labels: -1, valence: [0, 0.4], energy: [0.3, 0.7]},
-    surprised: {labels: 2, valence: -1, energy: [0.7, 1]}
+    happiness: {labels: 1, valence: [0.7, 1], energy: [-1, -1]},
+    sadness: {labels: 0, valence: [0, 0.1], energy: [0, 0.3]},
+    anger: {labels: -1, valence: [0, 0.1], energy: [0.8, 1]},
+    fear: {labels: -1, valence: [0, 0.2], energy: [0.8, 1]},
+    disgust: {labels: -1, valence: [0, 0.2], energy: [0.3, 0.7]},
+    surprise: {labels: 2, valence: -1, energy: [0.7, 1]}
 }
 
 export type Emotion = { 

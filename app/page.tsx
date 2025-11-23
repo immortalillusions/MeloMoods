@@ -40,7 +40,9 @@ const lastSongsQueue = new Queue<Song>();
 export default function Home() {
   // --- UI State ---
   const [AI, setAI] = useState(false);
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(true); // Default to dark mode
+  const [isLoading, setIsLoading] = useState(false); // Loading state for recommendations
+
   const [recommended, setRecommended] = useState<(Song | null)[]>(
     Array(5).fill(null)
   );
@@ -133,6 +135,9 @@ export default function Home() {
   };
 
   const getRecommendationsByEmotion = async (emotion: string) => {
+    if (isLoading) return; // Prevent multiple simultaneous requests
+    
+    setIsLoading(true);
     try {
       const response = await fetch(
         `/api/recommendSong?emotion=${emotion}&quantity=5`
@@ -154,6 +159,8 @@ export default function Home() {
       console.error("Error fetching recommendations:", error);
       setRecommended(Array(5).fill(null));
       setCurrentEmotion("");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -206,7 +213,7 @@ export default function Home() {
     <div
       className={`min-h-screen max-h-screen overflow-hidden transition-colors duration-300 ${
         isDark
-          ? "bg-black text-white"
+          ? "bg-[url('/stars.gif')] bg-cover bg-center text-white"
           : "bg-gradient-to-br from-green-50 to-green-100 text-gray-900"
       }`}
     >
@@ -222,74 +229,177 @@ export default function Home() {
           </h1>
           
           <div
-            className={`rounded-xl overflow-hidden aspect-square ${
-              isDark ? "bg-gray-900" : "bg-white shadow-lg"
-            }`}
+            className={`rounded-xl overflow-hidden `}
           >
              <div ref={embedContainerRef} className="w-full h-full" />
           </div>
 
           <button
             onClick={playNextSong}
-            className="mt-4 px-6 py-3 rounded-full bg-[#1db954] text-black font-bold text-sm uppercase tracking-wider hover:bg-[#1ed760] transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+            className="
+                            mt-2 px-6 py-3 
+                            rounded-full 
+                            bg-[#1db954] 
+                            text-black font-bold text-sm uppercase tracking-wider
+                            hover:bg-[#1ed760] 
+                            transition-all duration-200
+                            shadow-lg hover:shadow-xl
+                            hover:scale-105
+                        "
           >
             Next Song
           </button>
 
           {/* Toggle Controls */}
-          <div className="mt-6 space-y-3">
-            <div className="flex items-center justify-center gap-8">
-              {/* Light/Dark Mode Toggle */}
-              <div className="flex items-center space-x-2">
-                <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-900"}`}>Light</span>
-                <button
-                  onClick={() => setIsDark(!isDark)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isDark ? "bg-gray-600" : "bg-gray-300"}`}
-                >
-                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isDark ? "translate-x-5" : "translate-x-1"}`} />
-                </button>
-                <span className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-600"}`}>Dark</span>
+          <div className="mt-3 space-y-3">
+            {/* Both toggles side by side */}
+            <div className="flex items-center justify-between gap-8">
+              {/* Left side: Information Icon + Manual/Auto Toggle */}
+              <div className="flex items-center space-x-3">
+                {/* Information Icon */}
+                <div className="relative group">
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold cursor-help ${
+                      isDark
+                        ? "bg-slate-700 text-slate-300 border border-slate-600"
+                        : "bg-gray-200 text-gray-600 border border-gray-300"
+                    }`}
+                  >
+                    i
+                  </div>
+                  {/* Tooltip */}
+                  <div
+                    className={`absolute bottom-full left-0 mb-2 px-3 py-2 text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 ${
+                      isDark
+                        ? "bg-slate-800 text-white border border-slate-600"
+                        : "bg-gray-900 text-white"
+                    }`}
+                  >
+                    Recommendations are<br></br> based on energy & positivity
+                  </div>
+                </div>
+
+                {/* Manual/Auto Toggle */}
+                <div className="flex items-center space-x-2">
+                  <span
+                    className={`text-sm font-medium ${
+                      !AI
+                        ? isDark
+                          ? "text-white"
+                          : "text-gray-900"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    Manual
+                  </span>
+                  <button
+                    onClick={() => setAI(!AI)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                      AI ? "bg-[#1db954]" : "bg-gray-300"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        AI ? "translate-x-5" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                  <span
+                    className={`text-sm font-medium ${
+                      AI
+                        ? isDark
+                          ? "text-white"
+                          : "text-gray-900"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    Auto
+                  </span>
+                </div>
               </div>
 
-              {/* Manual/Auto Toggle */}
+              {/* Right side: Light/Dark Mode Toggle */}
               <div className="flex items-center space-x-2">
-                <span className={`text-sm font-medium ${!AI ? (isDark ? "text-white" : "text-gray-900") : "text-gray-400"}`}>Manual</span>
-                <button
-                  onClick={() => setAI(!AI)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${AI ? "bg-[#1db954]" : "bg-gray-300"}`}
+                <span
+                  className={`text-sm font-medium ${
+                    isDark ? "text-gray-300" : "text-gray-900"
+                  }`}
                 >
-                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${AI ? "translate-x-5" : "translate-x-1"}`} />
+                  Light
+                </span>
+                <button
+                  onClick={() => setIsDark(!isDark)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                    isDark ? "bg-gray-600" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                      isDark ? "translate-x-5" : "translate-x-1"
+                    }`}
+                  />
                 </button>
-                <span className={`text-sm font-medium ${AI ? (isDark ? "text-white" : "text-gray-900") : "text-gray-400"}`}>Auto</span>
+                <span
+                  className={`text-sm font-medium ${
+                    isDark ? "text-gray-white" : "text-gray-600"
+                  }`}
+                >
+                  Dark
+                </span>
               </div>
             </div>
           </div>
 
           {/* Emotion Controls */}
           {!AI ? (
-            <div className="mt-6">
-              <div className="space-y-3">
+            <div className="mt-4">
+              <div className="space-y-2">
+                {/* Neutral button - full width */}
                 <button
                   onClick={() => getRecommendationsByEmotion("neutral")}
-                  className="w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 bg-white hover:bg-gray-100 text-black border border-gray-300 shadow-sm hover:shadow-lg capitalize"
+                  disabled={isLoading}
+                  className={`
+                                        w-full h-12 px-4 py-2 text-sm font-medium rounded-lg 
+                                        transition-all duration-200 flex items-center justify-center
+                                        ${isLoading 
+                                          ? isDark
+                                            ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+                                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                          : isDark
+                                            ? "bg-slate-800 hover:bg-slate-700 text-white border border-slate-600"
+                                            : "bg-white hover:bg-gray-100 text-black border border-gray-300 shadow-sm hover:shadow-lg"
+                                        } capitalize
+                                    `}
                 >
-                  neutral
+                  {isLoading ? "Loading..." : "neutral"}
                 </button>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { emotion: "happy" },
-                    { emotion: "sad" },
-                    { emotion: "angry" },
-                    { emotion: "fearful" },
-                    { emotion: "disgusted" },
-                    { emotion: "surprised" },
+                    { emotion: "happiness" },
+                    { emotion: "sadness" },
+                    { emotion: "anger" },
+                    { emotion: "fear" },
+                    { emotion: "disgust" },
+                    { emotion: "surprise" },
                   ].map(({ emotion }) => (
                     <button
                       key={emotion}
                       onClick={() => getRecommendationsByEmotion(emotion)}
-                      className="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 bg-white hover:bg-gray-100 text-black border border-gray-300 shadow-sm hover:shadow-lg capitalize"
+                      disabled={isLoading}
+                      className={`
+                                                h-10 px-3 py-2 text-sm font-medium rounded-lg
+                                                transition-all duration-200 flex items-center justify-center
+                                                ${isLoading 
+                                                  ? isDark
+                                                    ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+                                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                                  : isDark
+                                                    ? "bg-slate-800 hover:bg-slate-700 text-white border border-slate-600"
+                                                    : "bg-white hover:bg-gray-100 text-black border border-gray-300 shadow-sm hover:shadow-lg"
+                                                } capitalize
+                                            `}
                     >
-                      {emotion}
+                      {isLoading ? "Loading..." : emotion}
                     </button>
                   ))}
                 </div>
@@ -297,7 +407,13 @@ export default function Home() {
             </div>
           ) : (
             <div className="mt-6">
-              <div className={`rounded-xl p-6 text-center ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white border border-gray-200 shadow-lg"}`}>
+              <div
+                className={`rounded-xl p-6 text-center ${
+                  isDark
+                    ? "bg-slate-900 border border-slate-700"
+                    : "bg-white border border-gray-200 shadow-lg"
+                }`}
+              >
                 <EmotionDetector
                   onMoodBlock={async (moods) => {
                     if (!moods || moods.length === 0) return;
@@ -319,35 +435,65 @@ export default function Home() {
         {/* Right Column: Queue & Recommended */}
         <div className="flex flex-col gap-2 w-80 h-full">
           {/* Queue Box */}
-          <div className={`rounded-xl p-4 flex-1 ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white border border-gray-200 shadow-lg"}`}>
-            <h3 className={`font-bold mb-3 text-lg ${isDark ? "text-white" : "text-gray-900"}`}>
+          <div
+            className={`rounded-xl p-4 flex-1 ${
+              isDark
+                ? "bg-slate-900 border border-slate-700"
+                : "bg-white border border-gray-200 shadow-lg"
+            }`}
+          >
+            <h3
+              className={`font-bold mb-3 text-lg ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
               🎵 Queue ({songQueue.size()} songs)
             </h3>
             <div
               className="space-y-2 h-full overflow-y-auto"
               style={{
                 scrollbarWidth: "thin",
-                scrollbarColor: isDark ? "#4b5563 #1f2937" : "#d1d5db #f9fafb",
+                scrollbarColor: isDark ? "#1e293b #0f172a" : "#d1d5db #f9fafb",
                 maxHeight: "calc(50vh - 100px)",
               }}
             >
                {/* Scrollbar Styles */}
               <style jsx>{`
-                div::-webkit-scrollbar { width: 6px; }
-                div::-webkit-scrollbar-track { background: ${isDark ? "#1f2937" : "#f9fafb"}; border-radius: 3px; }
-                div::-webkit-scrollbar-thumb { background: ${isDark ? "#4b5563" : "#d1d5db"}; border-radius: 3px; }
-                div::-webkit-scrollbar-thumb:hover { background: ${isDark ? "#6b7280" : "#9ca3af"}; }
+                div::-webkit-scrollbar {
+                  width: 6px;
+                }
+                div::-webkit-scrollbar-track {
+                  background: ${isDark ? "#0f172a" : "#f9fafb"};
+                  border-radius: 3px;
+                }
+                div::-webkit-scrollbar-thumb {
+                  background: ${isDark ? "#1e293b" : "#d1d5db"};
+                  border-radius: 3px;
+                }
+                div::-webkit-scrollbar-thumb:hover {
+                  background: ${isDark ? "#334155" : "#9ca3af"};
+                }
               `}</style>
 
               {songQueue.size() === 0 ? (
-                <div className={`p-3 rounded-lg text-center ${isDark ? "bg-gray-800 text-gray-400" : "bg-gray-50 text-gray-500"}`}>
+                <div
+                  className={`p-3 rounded-lg text-center ${
+                    isDark
+                      ? "bg-slate-800 text-slate-300"
+                      : "bg-gray-50 text-gray-500"
+                  }`}
+                >
                   <span className="text-sm">Queue is empty</span>
                 </div>
               ) : (
                 songQueue.getArray().map((song, index) => (
                   <div
                     key={`${song.id}-${index}`}
-                    className={`flex items-center justify-between p-3 rounded-lg ${isDark ? "bg-gray-800 hover:bg-gray-750" : "bg-gray-50 hover:bg-gray-100"} transition-colors`}
+                    className={`flex items-center justify-between p-3 rounded-lg ${
+                      isDark
+                        ? "bg-slate-800 hover:bg-slate-700"
+                        : "bg-gray-50 hover:bg-gray-100"
+                    } transition-colors`}
                   >
                     <span className={`text-sm truncate flex-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                       {song.name}
@@ -371,9 +517,24 @@ export default function Home() {
           </div>
 
           {/* Recommended Box */}
-          <div className={`rounded-xl p-4 flex-1 ${isDark ? "bg-gray-900 border border-gray-800" : "bg-white border border-gray-200 shadow-lg"}`}>
-            <h3 className={`font-bold mb-3 text-lg ${isDark ? "text-white" : "text-gray-900"}`}>
-              🎧 Recommended {currentEmotion && `(${currentEmotion.charAt(0).toUpperCase() + currentEmotion.slice(1)})`}
+          <div
+            className={`rounded-xl p-4 flex-1 ${
+              isDark
+                ? "bg-slate-900 border border-slate-700"
+                : "bg-white border border-gray-200 shadow-lg"
+            }`}
+          >
+            <h3
+              className={`font-bold mb-3 text-lg ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              🎧 Recommended{" "}
+              {currentEmotion &&
+                `(${
+                  currentEmotion.charAt(0).toUpperCase() +
+                  currentEmotion.slice(1)
+                })`}
             </h3>
             <div
               className="space-y-2"
@@ -382,7 +543,11 @@ export default function Home() {
               {recommended.map((song, index) => (
                 <div
                   key={index}
-                  className={`flex items-center justify-between p-3 rounded-lg ${isDark ? "bg-gray-800 hover:bg-gray-750" : "bg-gray-50 hover:bg-gray-100"} transition-colors`}
+                  className={`flex items-center justify-between p-3 rounded-lg ${
+                    isDark
+                      ? "bg-slate-800 hover:bg-slate-700"
+                      : "bg-gray-50 hover:bg-gray-100"
+                  } transition-colors`}
                 >
                   {song ? (
                     <>
@@ -397,7 +562,11 @@ export default function Home() {
                       </button>
                     </>
                   ) : (
-                    <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                    <span
+                      className={`text-sm ${
+                        isDark ? "text-slate-300" : "text-gray-500"
+                      }`}
+                    >
                       Loading {index + 1}...
                     </span>
                   )}
