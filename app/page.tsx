@@ -179,7 +179,7 @@ export default function Home() {
       const options = {
         uri: `spotify:track:${songId}`,
         width: "100%",
-        height: "500px",
+        height: "360px",
         theme: isDark ? "dark" : "light",
       };
 
