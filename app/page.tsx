@@ -319,12 +319,12 @@ export default function Home() {
                 {/* Other emotions - 2x3 grid */}
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { emotion: "happy" },
-                    { emotion: "sad" },
-                    { emotion: "angry" },
-                    { emotion: "fearful" },
-                    { emotion: "disgusted" },
-                    { emotion: "surprised" },
+                    { emotion: "happiness" },
+                    { emotion: "sadness" },
+                    { emotion: "anger" },
+                    { emotion: "fear" },
+                    { emotion: "disgust" },
+                    { emotion: "surprise" },
                   ].map(({ emotion }) => (
                     <button
                       key={emotion}
