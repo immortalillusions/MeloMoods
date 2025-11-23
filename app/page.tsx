@@ -518,7 +518,7 @@ export default function Home() {
 
           {/* Recommended Box */}
           <div
-            className={`rounded-xl p-4 flex-1 ${
+            className={`rounded-xl p-4 h-85 ${
               isDark
                 ? "bg-slate-900 border border-slate-700"
                 : "bg-white border border-gray-200 shadow-lg"
