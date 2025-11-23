@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MetaMoods",
+  title: "MeloMoods",
   description: "Experience music that truly matches your mood with MeloMoods!",
 };
 
