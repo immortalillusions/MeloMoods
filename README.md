@@ -32,7 +32,7 @@ A mood-based music recommendation system that tailors Spotify song suggestions t
 
 - **Frontend**: Next.js, React, TypeScript
 - **Styling**: Tailwind CSS
-- **AI/ML**: face-api.js, custom emotion detection model
+- **AI/ML**: face-api.js, custom emotion detection model (PyTorch)
 - **Database**: PostgreSQL with 278k song dataset
 - **Music API**: Spotify Web API
 - **Deployment**: Vercel
