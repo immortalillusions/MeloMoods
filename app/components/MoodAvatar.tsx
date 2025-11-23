@@ -15,7 +15,7 @@ export default function MoodAvatar({ emotion }: { emotion: string }) {
   const src = EMOTION_TO_IMAGE[emotion] || EMOTION_TO_IMAGE["neutral"];
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-2 h-[100px]">
       <Image
         src={src}
         alt={emotion}
