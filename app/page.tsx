@@ -1,26 +1,44 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Queue, Song } from "./lib/definitions";
 import EmotionDetector from "./components/EmotionDetector";
 
-// have a state called AI for AI toggle -> onMoodBlock will update recommended Array every 10s - do nothing if not AI
-// buttons will be visible if not AI -> update recommended Array
-// EmotionDetector will be a component within song-display -- this implements onMoodBlock AND has the html for the camera video
+// --- Types for Spotify IFrame API ---
+interface IFrameOptions {
+  uri: string;
+  width?: string;
+  height?: string;
+  theme?: string;
+}
 
-// call the processing in page.tsx (backend) -> pass the randomized 5 list as a prop here
-// when play next button is pressed -> update songQueue, songId
-// if queue is empty, plays a non recently played (within last 10 songs) song from recommended list
+interface IFrameController {
+  loadUri: (uri: string) => void;
+  play: () => void;
+  resume: () => void;
+  pause: () => void;
+  addListener: (event: string, callback: (data: any) => void) => void;
+  destroy: () => void;
+}
 
+interface Window {
+  onSpotifyIframeApiReady?: (IFrameAPI: {
+    createController: (
+      element: HTMLElement,
+      options: IFrameOptions,
+      callback: (controller: IFrameController) => void
+    ) => void;
+  }) => void;
+}
+declare let window: Window;
+
+// --- Global State for Queue (Preserving your logic) ---
 const songQueue = new Queue<Song>();
-
-// ensure the last 10 songs are not repeated
-// freq map, set, queue - when we play a new song, add to queue + set + update freq, popqueue if >10, -- freq[e], if freq == 0, remove from set
-// when we recommend song, ensure it's not in set
 const freq = new Map<string, number>();
 const lastTenSongs = new Set<string>();
 const lastSongsQueue = new Queue<Song>();
 
 export default function Home() {
+  // --- UI State ---
   const [AI, setAI] = useState(false);
   const [isDark, setIsDark] = useState(true); // Default to dark mode
   const [isLoading, setIsLoading] = useState(false); // Loading state for recommendations
@@ -29,20 +47,32 @@ export default function Home() {
     Array(5).fill(null)
   );
   const [currentEmotion, setCurrentEmotion] = useState<string>("");
-
-  // trigger re-renders when queue changes
-  const [, setQueueVersion] = useState(0);
-
+  const [, setQueueVersion] = useState(0); // Force re-render for queue updates
+  
+  // --- Player State ---
   const [songId, setSongId] = useState("1yn5VIHdxIlVMPRdQzR2sm");
+  
+  // --- Refs (Crucial for Autoplay) ---
+  const embedContainerRef = useRef<HTMLDivElement>(null);
+  const controllerRef = useRef<IFrameController | null>(null);
+  
+  // We need refs for these so the Spotify event listener can access the latest data
+  // without stale closures.
+  const recommendedRef = useRef<(Song | null)[]>([]);
+  const lastTenSongsRef = useRef<Set<string>>(lastTenSongs);
 
-  // update the last 10 recently played list
+  // Sync refs with state/globals
+  useEffect(() => {
+    recommendedRef.current = recommended;
+  }, [recommended]);
+
+  // --- Logic: Recently Played ---
   const addToRecentlyPlayed = (song: Song) => {
-    // Add to set and update frequency
     lastTenSongs.add(song.id);
+    lastTenSongsRef.current = lastTenSongs; // Update ref
     freq.set(song.id, (freq.get(song.id) || 0) + 1);
     lastSongsQueue.enqueue(song);
 
-    // If we have more than 10 songs, remove the oldest
     if (lastSongsQueue.size() > 10) {
       const oldestSong = lastSongsQueue.dequeue();
       if (oldestSong) {
@@ -57,48 +87,45 @@ export default function Home() {
     }
   };
 
-  // Function to add song to queue (FIFO)
+  // --- Logic: Queue Management ---
   const addToQueue = (song: Song | null) => {
     if (song) {
       songQueue.enqueue(song);
-      setQueueVersion((prev) => prev + 1); // Force re-render
+      setQueueVersion((prev) => prev + 1);
     }
   };
 
-  // Function to remove song from queue by index
   const removeFromQueue = (index: number) => {
     songQueue.remove(index);
-    setQueueVersion((prev) => prev + 1); // Force re-render
+    setQueueVersion((prev) => prev + 1);
   };
 
-  // Function to play next song (top song)
   const playNextSong = () => {
     const nextSong = songQueue.dequeue();
+    
     if (nextSong) {
       setSongId(nextSong.id);
-      addToRecentlyPlayed(nextSong); // Track the song
-      setQueueVersion((prev) => prev + 1); // Force re-render
+      addToRecentlyPlayed(nextSong);
+      setQueueVersion((prev) => prev + 1);
     } else {
-      // play a random song from the recommended
-      // ensure the random song hasn't played in the last 10 songs
-      const availableSongs = recommended.filter(
-        (song) => song !== null && !lastTenSongs.has(song.id)
+      const currentRecs = recommendedRef.current;
+      
+      const availableSongs = currentRecs.filter(
+        (song) => song !== null && !lastTenSongsRef.current.has(song.id)
       ) as Song[];
 
       if (availableSongs.length > 0) {
         const randomIndex = Math.floor(Math.random() * availableSongs.length);
         const randomSong = availableSongs[randomIndex];
         setSongId(randomSong.id);
-        addToRecentlyPlayed(randomSong); // Track the song
+        addToRecentlyPlayed(randomSong);
       } else {
-        // If all recommended songs are in last 10, just pick any random one
-        const nonNullRecommended = recommended.filter(
+        const nonNullRecommended = currentRecs.filter(
           (song) => song !== null
         ) as Song[];
+        
         if (nonNullRecommended.length > 0) {
-          const randomIndex = Math.floor(
-            Math.random() * nonNullRecommended.length
-          );
+          const randomIndex = Math.floor(Math.random() * nonNullRecommended.length);
           const randomSong = nonNullRecommended[randomIndex];
           setSongId(randomSong.id);
           addToRecentlyPlayed(randomSong);
@@ -107,7 +134,6 @@ export default function Home() {
     }
   };
 
-  // Function to get recommendations based on emotion
   const getRecommendationsByEmotion = async (emotion: string) => {
     if (isLoading) return; // Prevent multiple simultaneous requests
     
@@ -117,11 +143,9 @@ export default function Home() {
         `/api/recommendSong?emotion=${emotion}&quantity=5`
       );
       const data = await response.json();
-      console.log("Recommendation Response:", data);
-
+      
       if (response.ok) {
         const songs = data.songs || [];
-
         setRecommended(
           songs.concat(Array(Math.max(0, 5 - songs.length)).fill(null))
         );
@@ -140,13 +164,50 @@ export default function Home() {
     }
   };
 
-  // Load neutral recommendations on component mount
   useEffect(() => {
-    const loadInitialRecommendations = async () => {
-      await getRecommendationsByEmotion("neutral");
+    const script = document.createElement("script");
+    script.src = "https://open.spotify.com/embed-podcast/iframe-api/v1";
+    script.async = true;
+    document.body.appendChild(script);
+
+    window.onSpotifyIframeApiReady = (IFrameAPI) => {
+      const element = embedContainerRef.current;
+      if (!element) return;
+
+      const options = {
+        uri: `spotify:track:${songId}`,
+        width: "100%",
+        height: "390px",
+        theme: isDark ? "dark" : "light",
+      };
+
+      IFrameAPI.createController(element, options, (controller) => {
+        controllerRef.current = controller;
+
+        controller.addListener("playback_update", (e) => {
+            if (e.data.position > 0 && e.data.position >= e.data.duration - 100) {
+               playNextSong(); 
+            }
+        });
+      });
     };
-    loadInitialRecommendations();
+
+    return () => {
+    };
   }, []);
+
+  useEffect(() => {
+    if (controllerRef.current && songId) {
+      const uri = `spotify:track:${songId}`;
+      controllerRef.current.loadUri(uri);
+      controllerRef.current.play(); 
+    }
+  }, [songId]);
+
+  useEffect(() => {
+    getRecommendationsByEmotion("neutral");
+  }, []);
+
 
   return (
     <div
@@ -157,7 +218,7 @@ export default function Home() {
       }`}
     >
       <div className="flex gap-6 p-4 h-screen justify-center items-start">
-        {/* Spotify Player */}
+        {/* Left Column: Player & Controls */}
         <div className="flex flex-col w-96">
           <h1
             className={`text-center mb-2.5 text-3xl font-bold tracking-tight ${
@@ -166,17 +227,13 @@ export default function Home() {
           >
             MeloMoods :D
           </h1>
+          
           <div
             className={`rounded-xl overflow-hidden `}
           >
-            <iframe
-              src={`https://open.spotify.com/embed/track/${songId}`}
-              width="380"
-              height="360"
-              allow="encrypted-media"
-              style={{ border: "none" }}
-            ></iframe>
+             <div ref={embedContainerRef}   className="rounded-xl overflow-hidden shadow-xl border border-white/10 w-full sm:h-[380px] md:h-[450px] lg:h-[500px]"/>
           </div>
+
           <button
             onClick={playNextSong}
             className="
@@ -293,7 +350,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Emotion Buttons or Placeholder */}
+          {/* Emotion Controls */}
           {!AI ? (
             <div className="mt-4">
               <div className="space-y-2">
@@ -316,7 +373,6 @@ export default function Home() {
                 >
                   {isLoading ? "Loading..." : "neutral"}
                 </button>
-                {/* Other emotions - 2x3 grid */}
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { emotion: "happiness" },
@@ -361,31 +417,22 @@ export default function Home() {
                 <EmotionDetector
                   onMoodBlock={async (moods) => {
                     if (!moods || moods.length === 0) return;
-
-                    const top = [...moods].sort(
-                      (a, b) => b.confidence - a.confidence
-                    )[0];
-
+                    const top = [...moods].sort((a, b) => b.confidence - a.confidence)[0];
                     if (top && top.expression) {
                       console.log("Detected Emotion:", top.expression);
                       await getRecommendationsByEmotion(top.expression);
                     }
                   }}
                 />
-
-                <span
-                  className={`mt-4 block text-sm ${
-                    isDark ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  Your camera will be used to detect your mood every 10 seconds
-                  and update recommendations automatically.
+                <span className={`mt-4 block text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Your camera will be used to detect your mood every 10 seconds and update recommendations automatically.
                 </span>
               </div>
             </div>
           )}
         </div>
-        {/* Queue and Recommended Lists */}
+
+        {/* Right Column: Queue & Recommended */}
         <div className="flex flex-col gap-2 w-80 h-full">
           {/* Queue Box */}
           <div
@@ -410,6 +457,7 @@ export default function Home() {
                 maxHeight: "calc(50vh - 100px)",
               }}
             >
+               {/* Scrollbar Styles */}
               <style jsx>{`
                 div::-webkit-scrollbar {
                   width: 6px;
@@ -426,6 +474,7 @@ export default function Home() {
                   background: ${isDark ? "#334155" : "#9ca3af"};
                 }
               `}</style>
+
               {songQueue.size() === 0 ? (
                 <div
                   className={`p-3 rounded-lg text-center ${
@@ -446,11 +495,7 @@ export default function Home() {
                         : "bg-gray-50 hover:bg-gray-100"
                     } transition-colors`}
                   >
-                    <span
-                      className={`text-sm truncate flex-1 ${
-                        isDark ? "text-white" : "text-gray-900"
-                      }`}
-                    >
+                    <span className={`text-sm truncate flex-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                       {song.name}
                     </span>
                     <button
@@ -465,13 +510,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Header for recommendations section */}
           <div className="text-center">
-            <h4
-              className={`text-lg font-semibold ${
-                isDark ? "text-white" : "text-gray-900"
-              }`}
-            >
+            <h4 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
               ✨ Get Recommendations by Mood
             </h4>
           </div>
@@ -498,9 +538,7 @@ export default function Home() {
             </h3>
             <div
               className="space-y-2"
-              style={{
-                maxHeight: "calc(50vh - 100px)",
-              }}
+              style={{ maxHeight: "calc(50vh - 100px)" }}
             >
               {recommended.map((song, index) => (
                 <div
@@ -513,11 +551,7 @@ export default function Home() {
                 >
                   {song ? (
                     <>
-                      <span
-                        className={`text-sm truncate flex-1 ${
-                          isDark ? "text-white" : "text-gray-900"
-                        }`}
-                      >
+                      <span className={`text-sm truncate flex-1 ${isDark ? "text-white" : "text-gray-900"}`}>
                         {song.name}
                       </span>
                       <button
