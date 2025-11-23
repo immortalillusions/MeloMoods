@@ -237,7 +237,7 @@ export default function Home() {
           <button
             onClick={playNextSong}
             className="
-                            mt-2 px-6 py-3 
+                            -mt-4 px-6 py-3 
                             rounded-full 
                             bg-[#1db954] 
                             text-black font-bold text-sm uppercase tracking-wider
@@ -406,9 +406,9 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="mt-6">
+            <div className="mt-2">
               <div
-                className={`rounded-xl p-6 text-center ${
+                className={`rounded-xl p-2 text-center ${
                   isDark
                     ? "bg-slate-900 border border-slate-700"
                     : "bg-white border border-gray-200 shadow-lg"
@@ -424,8 +424,8 @@ export default function Home() {
                     }
                   }}
                 />
-                <span className={`mt-4 block text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                  Your camera will be used to detect your mood every 10 seconds and update recommendations automatically.
+                <span className={`mt-2 block text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Recommendations will be updated every 10 seconds.
                 </span>
               </div>
             </div>
