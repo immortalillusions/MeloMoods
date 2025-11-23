@@ -40,7 +40,7 @@ const lastSongsQueue = new Queue<Song>();
 export default function Home() {
   // --- UI State ---
   const [AI, setAI] = useState(false);
-  const [isDark, setIsDark] = useState(true); // Default to dark mode
+  const [isDark, setIsDark] = useState(false); // Default to light mode
   const [isLoading, setIsLoading] = useState(false); // Loading state for recommendations
 
   const [recommended, setRecommended] = useState<(Song | null)[]>(
