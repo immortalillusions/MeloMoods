@@ -177,7 +177,7 @@ export default function Home() {
       const options = {
         uri: `spotify:track:${songId}`,
         width: "100%",
-        height: "100%",
+        height: "390px",
         theme: isDark ? "dark" : "light",
       };
 
@@ -231,7 +231,7 @@ export default function Home() {
           <div
             className={`rounded-xl overflow-hidden `}
           >
-             <div ref={embedContainerRef} className="w-full h-full" />
+             <div ref={embedContainerRef}   className="rounded-xl overflow-hidden shadow-xl border border-white/10 w-full sm:h-[380px] md:h-[450px] lg:h-[500px]"/>
           </div>
 
           <button

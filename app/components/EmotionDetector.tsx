@@ -144,7 +144,7 @@ console.log(sessionRef.current.outputMetadata);
       
       // console.log("AI Logits:", raw); 
 
-      const probs = softmax(Array.from(raw));
+      const probs = softmax(Array.from(raw), 0.5);
       const sorted = probs
         .map((p, i) => ({ expression: EMOTION_LABELS[i], confidence: p }))
         .sort((a, b) => b.confidence - a.confidence);
@@ -210,9 +210,9 @@ console.log(sessionRef.current.outputMetadata);
     return new ort.Tensor("float32", floatData, [1, 1, SIZE, SIZE]);
   }
 
-  function softmax(arr: number[]) {
+  function softmax(arr: number[], temperature = 0.5) {
     const max = Math.max(...arr);
-    const exps = arr.map((v) => Math.exp(v - max));
+    const exps = arr.map((v) => Math.exp((v - max)/temperature));
     const sum = exps.reduce((a, b) => a + b, 0);
     return exps.map((e) => e / sum);
   }
