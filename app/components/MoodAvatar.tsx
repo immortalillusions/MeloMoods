@@ -15,12 +15,12 @@ export default function MoodAvatar({ emotion }: { emotion: string }) {
   const src = EMOTION_TO_IMAGE[emotion] || EMOTION_TO_IMAGE["neutral"];
 
   return (
-    <div className="flex flex-col items-center gap-2 h-[100px]">
+    <div className="flex flex-col items-center gap-2 h-[36px]">
       <Image
         src={src}
         alt={emotion}
-        width={90}
-        height={90}
+        width={36}
+        height={36}
         unoptimized
         className="rounded-md object-contain bg-black/20 p-1"
         style={{ imageRendering: "pixelated" }}

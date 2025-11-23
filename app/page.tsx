@@ -448,7 +448,7 @@ export default function Home() {
         <div className="flex flex-col gap-2 w-80 h-full">
           {/* Queue Box */}
           <div
-            className={`rounded-xl p-4 flex-1 ${
+            className={`rounded-xl p-4 h-80 ${
               isDark
                 ? "bg-slate-900 border border-slate-700"
                 : "bg-white border border-gray-200 shadow-lg"
@@ -462,11 +462,11 @@ export default function Home() {
               🎵 Queue ({songQueue.size()} songs)
             </h3>
             <div
-              className="space-y-2 h-full overflow-y-auto"
+              className="space-y-2 overflow-y-auto"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: isDark ? "#1e293b #0f172a" : "#d1d5db #f9fafb",
-                maxHeight: "calc(50vh - 100px)",
+                maxHeight: "240px",
               }}
             >
                {/* Scrollbar Styles */}
@@ -530,7 +530,7 @@ export default function Home() {
 
           {/* Recommended Box */}
           <div
-            className={`rounded-xl p-4 flex-1 ${
+            className={`rounded-xl p-4 h-85 ${
               isDark
                 ? "bg-slate-900 border border-slate-700"
                 : "bg-white border border-gray-200 shadow-lg"
