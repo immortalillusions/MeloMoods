@@ -36,7 +36,6 @@ export default function SongDisplay({
     recommendedRef.current = Array.isArray(recommended) ? recommended : [];
   }, [recommended]);
 
-  // --- Spotify Embed Script ---
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://open.spotify.com/embed/iframe-api/v1";
@@ -52,7 +51,7 @@ export default function SongDisplay({
         width: "100%",
         height: "100%",
       };
-      IFrameAPI.createController(element, options, (controller: any) => {
+       IFrameAPI.createController(element, options, (controller: any) => {
         controllerRef.current = controller;
 
         controller.addListener("ready", () => {
@@ -65,9 +64,6 @@ export default function SongDisplay({
           if (e.data.position >= e.data.duration - 150) {
             playNextSong();
           }
-        });
-        controller.addListener("ended", () => {
-          playNextSong();
         });
       });
     };
